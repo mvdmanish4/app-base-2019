@@ -7,7 +7,10 @@ import com.mongodb.client.model.*;
 import com.mongodb.client.model.Sorts;
 import edu.cmu.andrew.karim.server.exceptions.AppException;
 import edu.cmu.andrew.karim.server.exceptions.AppInternalServerException;
+import edu.cmu.andrew.karim.server.exceptions.AppUnauthorizedException;
+import edu.cmu.andrew.karim.server.models.Session;
 import edu.cmu.andrew.karim.server.models.User;
+import edu.cmu.andrew.karim.server.utils.APPCrypt;
 import edu.cmu.andrew.karim.server.utils.MongoPool;
 import edu.cmu.andrew.karim.server.utils.AppLogger;
 import org.bson.BSON;
@@ -17,8 +20,10 @@ import org.bson.types.ObjectId;
 import org.json.JSONObject;
 
 
+import javax.ws.rs.core.HttpHeaders;
 import java.lang.String;
 import java.util.ArrayList;
+import java.util.List;
 
 public class UserManager extends Manager {
     public static UserManager _self;
@@ -56,9 +61,12 @@ public class UserManager extends Manager {
 
     }
 
-    public void updateUser( User user) throws AppException {
+    public void updateUser(HttpHeaders headers, User user) throws AppException {
         try {
-
+            //checkAuthentication(headers, user.getId());
+            Session session = SessionManager.getInstance().getSessionForToken(headers);
+            if(!session.getUserId().equals(user.getId()))
+                throw new AppUnauthorizedException(70,"Invalid user id");
 
             Bson filter = new Document("_id", new ObjectId(user.getId()));
             Bson newValue = new Document()
@@ -72,7 +80,11 @@ public class UserManager extends Manager {
             else
                 throw new AppInternalServerException(0, "Failed to update user details");
 
-        } catch(Exception e) {
+        }
+        catch(AppUnauthorizedException e) {
+            throw new AppUnauthorizedException(34, e.getMessage());
+        }
+        catch(Exception e) {
             throw handleException("Update User", e);
         }
     }
@@ -171,6 +183,8 @@ public class UserManager extends Manager {
             throw handleException("Get User List", e);
         }
     }
+
+
 
 
 }

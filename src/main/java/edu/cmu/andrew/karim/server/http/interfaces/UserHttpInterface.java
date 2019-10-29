@@ -65,9 +65,10 @@ public class UserHttpInterface extends HttpInterface{
             AppLogger.info("Got an API call");
             ArrayList<User> users = null;
 
+            //Sorting
             if(sortby != null)
                 users = UserManager.getInstance().getUserListSorted(sortby);
-            else if(offset != null && count != null)
+            else if(offset != null && count != null) //Pagination
                 users = UserManager.getInstance().getUserListPaginated(offset, count);
             else
                 users = UserManager.getInstance().getUserList();
@@ -80,26 +81,6 @@ public class UserHttpInterface extends HttpInterface{
             throw handleException("GET /users", e);
         }
     }
-
-
-    /*
-  //http://server.com/api/users?begin=11&count=10
-    @GET
-    @Produces({MediaType.APPLICATION_JSON})
-    public AppResponse getUsersPaginated(@Context HttpHeaders headers){
-
-        try{
-            AppLogger.info("Got an API call");
-            ArrayList<User> users = UserManager.getInstance().getUserList();
-
-            if(users != null)
-                return new AppResponse(users);
-            else
-                throw new HttpBadRequestException(0, "Problem with getting users");
-        }catch (Exception e){
-            throw handleException("GET /users", e);
-        }
-    }*/
 
     @GET
     @Path("/{userId}")
@@ -117,16 +98,13 @@ public class UserHttpInterface extends HttpInterface{
         }catch (Exception e){
             throw handleException("GET /users/{userId}", e);
         }
-
-
     }
-
 
     @PATCH
     @Path("/{userId}")
     @Consumes({ MediaType.APPLICATION_JSON})
     @Produces({ MediaType.APPLICATION_JSON})
-    public AppResponse patchUsers(Object request, @PathParam("userId") String userId){
+    public AppResponse patchUsers(@Context HttpHeaders headers, Object request, @PathParam("userId") String userId){
 
         JSONObject json = null;
 
@@ -140,7 +118,7 @@ public class UserHttpInterface extends HttpInterface{
                     json.getInt("riderBalance")
             );
 
-            UserManager.getInstance().updateUser(user);
+            UserManager.getInstance().updateUser(headers,user);
 
         }catch (Exception e){
             throw handleException("PATCH users/{userId}", e);
@@ -150,13 +128,11 @@ public class UserHttpInterface extends HttpInterface{
     }
 
 
-
-
     @DELETE
     @Path("/{userId}")
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
-    public AppResponse deleteUsers(@PathParam("userId") String userId){
+    public AppResponse deleteUsers(@Context HttpHeaders headers, @PathParam("userId") String userId){
 
         try{
             UserManager.getInstance().deleteUser( userId);
@@ -166,6 +142,5 @@ public class UserHttpInterface extends HttpInterface{
         }
 
     }
-
 
 }
